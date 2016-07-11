@@ -27,9 +27,6 @@ public class Ship implements Runnable {
 		logger.debug("Создан Корабль " + name + ", склад которого вмещает " + shipWarehouseSize + " контейнеров.");
 	}
 
-	/*public void setContainersToWarehouse(List<Container> containerList) {
-		shipWarehouse.addContainer(containerList);
-	}*/
 	public void setContainersToWarehouse(List<Container> containerList) {
 		shipWarehouse.addContainer(containerList);
 	}

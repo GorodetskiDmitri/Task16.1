@@ -24,7 +24,7 @@ public class Main {
 		for (int i=0; i<warehousePortSize; i++){
 			containerList.add(new Container(i+30));
 		}
-		Ship ship1 = new Ship("Ship1", port, 17);
+		Ship ship1 = new Ship("Ship1", port, 90);
 		ship1.setContainersToWarehouse(containerList);
 		
 		containerList = new ArrayList<Container>(warehousePortSize);
@@ -36,7 +36,7 @@ public class Main {
 		
 		containerList = new ArrayList<Container>(warehousePortSize);
 		for (int i=0; i<warehousePortSize; i++){
-			containerList.add(new Container(i+60));
+			containerList.add(new Container(i+90));
 		}
 		Ship ship3 = new Ship("Ship3", port, 90);
 		ship3.setContainersToWarehouse(containerList);		
