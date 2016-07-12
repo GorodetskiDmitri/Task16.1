@@ -2,19 +2,14 @@ package warehouse;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class Warehouse {
+	
 	private List<Container> containerList;
 	private int size;
-	//private Lock lock;
-	private Lock lock;
 
 	public Warehouse(int size) {
 		containerList = new ArrayList<Container>(size);
-		//lock = new ReentrantLock();
-		lock = new ReentrantLock();
 		this.size = size;
 	}
 
@@ -31,17 +26,21 @@ public class Warehouse {
 	}
 
 	public Container getContainer() {
-		if (containerList.size() > 0) {
-			return containerList.remove(0);
+		synchronized (containerList) {
+			if (containerList.size() > 0) {
+				return containerList.remove(0);
+			}
 		}
 		return null;
 	}
 
 	public List<Container> getContainer(int amount) {
-		if (containerList.size() >= amount) {			
-			List<Container> cargo = new ArrayList<Container>(containerList.subList(0, amount));
-			containerList.removeAll(cargo);
-			return cargo;
+		synchronized (containerList) {
+			if (containerList.size() >= amount) {			
+				List<Container> cargo = new ArrayList<Container>(containerList.subList(0, amount));
+				containerList.removeAll(cargo);
+				return cargo;
+			}
 		}
 		return null;
 	}
@@ -58,10 +57,4 @@ public class Warehouse {
 		return size - containerList.size();
 	}
 	
-	/*public Lock getLock(){
-		return lock;
-	}*/	
-	public Lock getLock(){
-		return lock;
-	}
 }

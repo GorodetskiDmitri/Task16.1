@@ -24,7 +24,7 @@ public class Ship implements Runnable {
 		this.name = name;
 		this.port = port;
 		shipWarehouse = new Warehouse(shipWarehouseSize);
-		logger.debug("Создан Корабль " + name + ", склад которого вмещает " + shipWarehouseSize + " контейнеров.");
+		logger.debug("Ship " + name + " created.");
 	}
 
 	public void setContainersToWarehouse(List<Container> containerList) {
@@ -46,17 +46,16 @@ public class Ship implements Runnable {
 				inPort();
 			}
 		} catch (InterruptedException e) {
-			logger.error("С кораблем случилась неприятность и он уничтожен.", e);
+			logger.error("On the ship there was a nuisance, and it is destroyed.", e);
 		} catch (PortException e) {
-			logger.error("С портом случилась неприятность и он уничтожен. ", e);//!!! переписать сообщение
+			logger.error("In the port there was a nuisance.", e);
 		}
 	}
 
 	private void atSea() throws InterruptedException {
-		logger.debug("~~~~~ Корабль " + name + " плывет по морю ~~~~~\n");
+		logger.debug("~~~~~ Ship " + name + " sails on the sea ~~~~~");
 		Thread.sleep(1000);
 	}
-
 
 	private void inPort() throws PortException, InterruptedException {
 
@@ -67,31 +66,33 @@ public class Ship implements Runnable {
 			
 			if (isLockedBerth) {
 				berth = port.getBerth(this);
-				logger.debug("Корабль " + name + " пришвартовался к причалу " + berth.getId());
+				logger.debug("Ship " + name + " docked to the berth " + berth.getId());
 				ShipAction action = getNextAction();
 				executeAction(action, berth);
 			} else {
-				logger.debug("Кораблю " + name + " отказано в швартовке к причалу ");
+				logger.debug("Ship " + name + " refused to docking berth.");
 			}
 		} finally {
 			if (isLockedBerth){
 				port.unlockBerth(this);
-				logger.debug("Корабль " + name + " отошел от причала " + berth.getId());
+				logger.debug("Ship " + name + " moved away from the berth " + berth.getId());
 			}
 		}
-		
 	}
 
 	private void executeAction(ShipAction action, Berth berth) throws InterruptedException {
+		/*logger.debug("Корабль " + name + ": БУДЕМ ЗАГРУЖАТЬСЯ [на складе порта " 
+				+ port.getPortWarehouse().getRealSize() + " контейнеров]");
+		loadFromPort(berth);*/
 		switch (action) {
 		case LOAD_TO_PORT:
-				logger.debug("Корабль " + name + ": БУДЕМ ВЫГРУЖАТЬСЯ [на складе корабля " 
-						+ shipWarehouse.getRealSize() + " контейнеров]");
+				logger.debug("Ship " + name + ": UNLOAD [ship has " 
+						+ shipWarehouse.getRealSize() + " containers].");
  				loadToPort(berth);
 			break;
 		case LOAD_FROM_PORT:
-				logger.debug("Корабль " + name + ": БУДЕМ ЗАГРУЖАТЬСЯ [на складе порта " 
-						+ port.getPortWarehouse().getRealSize() + " контейнеров]");
+				logger.debug("Ship " + name + ": DOWNLOAD [port has " 
+						+ port.getPortWarehouse().getRealSize() + " containers].");
 				loadFromPort(berth);
 			break;
 		}
@@ -102,59 +103,58 @@ public class Ship implements Runnable {
 		int containersNumberToMove = conteinersCount(shipWarehouse.getRealSize());
 		boolean result = false;
 
-		logger.debug("Корабль " + name + " хочет выгрузить " + containersNumberToMove
-				+ " контейнеров на склад порта.");
+		logger.debug("Ship " + name + " wants to unload " + containersNumberToMove
+				+ " containers to the port warehouse.");
 
 		result = berth.add(shipWarehouse, containersNumberToMove);
 		
 		if (!result) {
-			logger.debug("Недостаточно места на складе порта для выгрузки кораблем "
-					+ name + " " + containersNumberToMove + " контейнеров.");
+			logger.debug("Not enough space in the port warehouse to unloading by ship "
+					+ name + " " + containersNumberToMove + " containers.");
 		} else {
-			logger.debug("Корабль " + name + " выгрузил " + containersNumberToMove
-					+ " контейнеров в порт.");
+			logger.debug("Ship " + name + " unloaded " + containersNumberToMove
+					+ " containers to the port warehouse.");
 			
 		}
-		System.out.println("ТЕПЕРЬ на корабле " + name + " " + shipWarehouse.getRealSize() + " контейнеров, на складе - "
-				+ port.getPortWarehouse().getRealSize() + " контейнеров");
 		return result;
 	}
 
 	private boolean loadFromPort(Berth berth) throws InterruptedException {
-		int count = port.getPortWarehouse().getRealSize() > 20 ? 20 : port.getPortWarehouse().getRealSize();
+		int currentNumberOfPortContainers = port.getPortWarehouse().getRealSize();
+		if (currentNumberOfPortContainers == 0) {
+			logger.debug("No more containers in the port warehouse.");
+			return false;
+		}
+		int count = currentNumberOfPortContainers > 20 ? 20 : port.getPortWarehouse().getRealSize();
 		int containersNumberToMove = conteinersCount(count);
 		
 		boolean result = false;
 
-		logger.debug("Корабль " + name + " хочет загрузить " + containersNumberToMove
-				+ " контейнеров со склада порта.");
+		logger.debug("Ship " + name + " wants to download " + containersNumberToMove
+				+ " containers from the port warehouse.");
 		
 		result = berth.get(shipWarehouse, containersNumberToMove);
 		
 		if (result) {
-			logger.debug("Корабль " + name + " загрузил " + containersNumberToMove
-					+ " контейнеров из порта.");
+			logger.debug("Ship " + name + " downloaded " + containersNumberToMove
+					+ " containers to the ship warehouse.");
 		} else {
-			logger.debug("Недостаточно места на на корабле " + name
-					+ " для погрузки " + containersNumberToMove + " контейнеров из порта.");
+			logger.debug("Not enough space in the ship warehouse to downloading by ship " + name
+					+ " " + containersNumberToMove + " containers.");
 		}
-		System.out.println("ТЕПЕРЬ на корабле " + name + " " + shipWarehouse.getRealSize() + " контейнеров, на складе - "
-				+ port.getPortWarehouse().getRealSize() + " контейнеров");
 		return result;
 	}
 
-	private int conteinersCount(int count) {//!!!!
+	private int conteinersCount(int count) {
 		Random random = new Random();
 		return random.nextInt(count) + 1;
 	}
 
 	private ShipAction getNextAction() {
 		if (shipWarehouse.getFreeSize() == 0) {
-			logger.debug("Корабль " + name + " пришел полностью загруженный");
 			return ShipAction.LOAD_TO_PORT;
 		}
 		if (shipWarehouse.getFreeSize() == shipWarehouse.getSize()) {
-			logger.debug("Корабль " + name + " пришел совсем пустой");
 			return ShipAction.LOAD_FROM_PORT;
 		}
 		Random random = new Random();

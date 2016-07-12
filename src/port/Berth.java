@@ -1,14 +1,15 @@
 package port;
 
 import java.util.List;
-//import java.util.concurrent.TimeUnit;
-//import java.util.concurrent.locks.Lock;
+
+import org.apache.log4j.Logger;
 
 import warehouse.Container;
 import warehouse.Warehouse;
 
 public class Berth {
 
+	private final static Logger logger = Logger.getRootLogger();
 	private int id;
 	private Warehouse portWarehouse;
 
@@ -23,12 +24,11 @@ public class Berth {
 
 	public boolean add(Warehouse shipWarehouse, int numberOfConteiners) throws InterruptedException {
 		boolean result = false;
-		//boolean portLock = false;
 		
 		List<Container> conteinersFromShip = shipWarehouse.getContainer(numberOfConteiners);
 		synchronized (portWarehouse) {
-				if (portWarehouse.getFreeSize() >= numberOfConteiners) {
-					result = portWarehouse.addContainer(conteinersFromShip);
+			if (portWarehouse.getFreeSize() >= numberOfConteiners) {
+				result = portWarehouse.addContainer(conteinersFromShip);
 			}
 		}
 		return result;
@@ -36,18 +36,21 @@ public class Berth {
 	
 	public boolean get(Warehouse shipWarehouse, int numberOfConteiners) throws InterruptedException {
 		boolean result = false;
-		//boolean portLock = false;
+		List<Container> conteinersFromPort = null;
 		
 		synchronized (portWarehouse) {
-				if (shipWarehouse.getFreeSize() >= numberOfConteiners) {
-					List<Container> conteinersFromPort = portWarehouse.getContainer(numberOfConteiners);
-					if (conteinersFromPort != null) {
-						result = shipWarehouse.addContainer(conteinersFromPort);
-					}
-				}
+			conteinersFromPort = portWarehouse.getContainer(numberOfConteiners);
+			if (conteinersFromPort == null) {
+				logger.error("Port warehouse has not requested number of containers");
+				return false;
+			}
 		}
+		
+		if (shipWarehouse.getFreeSize() >= numberOfConteiners && conteinersFromPort != null) {
+			result = shipWarehouse.addContainer(conteinersFromPort);
+		}
+		
 		return result;
 	}
-	
 	
 }
